@@ -14,13 +14,12 @@ public class HttpServerTest {
     @BeforeAll
     static void BeforeAll() {
         new Thread(() -> new HttpServer().start(PORT)).start();
+        RestAssured.baseURI = "http://127.0.0.1:" + PORT;
     }
 
     @Test
     @DisplayName("GET / should return 200 and 'Hello, World!'")
     void t1() {
-        RestAssured.baseURI = "http://127.0.0.1:" + PORT;
-
         given()
                 .when()
                 .get("/")
@@ -28,5 +27,17 @@ public class HttpServerTest {
                 .statusCode(200)
                 .header("Content-Type", "text/html")
                 .body(equalTo("Hello, World!"));
+    }
+
+    @Test
+    @DisplayName("GET /about should return 200 and 'I am a body!'")
+    void t2() {
+        given()
+                .when()
+                .get("/")
+                .then()
+                .statusCode(200)
+                .header("Content-Type", "text/html")
+                .body(equalTo("I am a body!"));
     }
 }

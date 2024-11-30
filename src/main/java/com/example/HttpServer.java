@@ -3,6 +3,7 @@ package com.example;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 public class HttpServer {
     public void start(int port) {
@@ -22,23 +23,35 @@ public class HttpServer {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
-            StringBuilder sb = new StringBuilder();
+            List<String> inputLines = in.lines().takeWhile(line -> !line.isEmpty()).toList();
 
-            sb.append("Hello, World!");
-            String body = sb.toString();
-
-            // Write HTTP response
-            String response = """
-                    HTTP/1.1 200 OK
-                    Content-Type: text/html
-                    Content-Length: %d
-                    
-                    %s
-                    """.formatted(body.length(), body).stripIndent().trim();
+            String response = getResponse(inputLines);
             out.write(response);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String getResponse(List<String> inputLines) {
+        StringBuilder outputSb = new StringBuilder();
+
+        if ( inputLines.get(0).startsWith("GET /about") ) {
+            outputSb.append("I am a body!");
+        } else {
+            outputSb.append("Hello, World!");
+        }
+
+        String body = outputSb.toString();
+
+        // Write HTTP response
+        String response = """
+                HTTP/1.1 200 OK
+                Content-Type: text/html
+                Content-Length: %d
+                
+                %s
+                """.formatted(body.length(), body).stripIndent().trim();
+        return response;
     }
 }

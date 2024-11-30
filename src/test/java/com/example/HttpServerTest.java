@@ -34,7 +34,7 @@ public class HttpServerTest {
     void t2() {
         given()
                 .when()
-                .get("/")
+                .get("/about")
                 .then()
                 .statusCode(200)
                 .header("Content-Type", "text/html")

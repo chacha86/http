@@ -40,4 +40,18 @@ public class HttpServerTest {
                 .header("Content-Type", "text/html")
                 .body(equalTo("I am a body!"));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/posts/1")
+    void t3() {
+        given()
+                .when()
+                .get("/api/v1/posts/1")
+                .then()
+                .statusCode(200)
+                .header("Content-Type", "application/json")
+                .body("id", equalTo(1))
+                .body("title", equalTo("Post 1"))
+                .body("content", equalTo("Content 1"));
+    }
 }

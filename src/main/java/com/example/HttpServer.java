@@ -35,23 +35,34 @@ public class HttpServer {
 
     private static String getResponse(List<String> inputLines) {
         StringBuilder outputSb = new StringBuilder();
+        String contentType = "text/html";
 
-        if ( inputLines.get(0).startsWith("GET /about") ) {
+        if (inputLines.get(0).startsWith("GET /about")) {
             outputSb.append("I am a body!");
+        } else if (inputLines.get(0).startsWith("GET /api/v1/posts/1")) {
+            outputSb.append("""
+                    {
+                        "id": 1,
+                        "title": "Post 1",
+                        "content": "Content 1"
+                    }
+                    """.stripIndent().trim());
+            contentType = "application/json";
         } else {
             outputSb.append("Hello, World!");
         }
+
 
         String body = outputSb.toString();
 
         // Write HTTP response
         String response = """
                 HTTP/1.1 200 OK
-                Content-Type: text/html
+                Content-Type: %s
                 Content-Length: %d
                 
                 %s
-                """.formatted(body.length(), body).stripIndent().trim();
+                """.formatted(contentType, body.length(), body).stripIndent().trim();
         return response;
     }
 }

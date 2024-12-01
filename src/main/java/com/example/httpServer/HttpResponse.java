@@ -3,34 +3,45 @@ package com.example.httpServer;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class HttpResponse {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private int status = 200;
     private String statusMessage = "OK";
-    private Map<String, String> headers;
-    private StringBuilder body;
+    private Map<String, String> headers = new HashMap<>();
+    private StringBuilder body = new StringBuilder();
 
     public HttpResponse() {
-        this.headers = new HashMap<>();
-        this.body = new StringBuilder();
         setHeader("Content-Type", "text/html");
     }
 
     public void setStatus(int status) {
         this.status = status;
-        switch (status) {
+        this.statusMessage = switch (status) {
             case 200 ->
-                statusMessage = "OK";
+                "OK";
             case 404 ->
-                statusMessage = "Not Found";
+                "Not Found";
             case 500 ->
-                statusMessage = "Internal Server Error";
-            // 필요한 상태 코드 추가 가능
-        }
+                "Internal Server Error";
+            default ->
+                "Unknown";
+        };
     }
 
-    public int getStatus() {
-        return status;
+    public void setJsonBody(Object obj) throws JsonProcessingException {
+        setHeader("Content-Type", "application/json");
+        String jsonBody = objectMapper.writeValueAsString(obj);
+        setBody(jsonBody);
     }
 
     public void setHeader(String name, String value) {

@@ -1,6 +1,12 @@
 package com.example.httpServer;
 
-import java.io.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -16,7 +22,7 @@ public class HttpServer {
 
             while (running) {
                 Socket clientSocket = serverSocket.accept();
-                handleClient(clientSocket);
+                Thread.startVirtualThread(() -> handleClient(clientSocket));
             }
         } catch (IOException e) {
             if (running) {
@@ -37,7 +43,9 @@ public class HttpServer {
     }
 
     private static void handleClient(Socket clientSocket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
+        try (clientSocket;
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
             HttpRequest request = parseRequest(in);
             HttpResponse response = new HttpResponse();
@@ -76,18 +84,18 @@ public class HttpServer {
     }
 
     private static void handleRequest(HttpRequest request, HttpResponse response) {
-        if (request.getRequestURI().equals("/about")) {
-            response.setBody("I am a body!");
-        } else if (request.getRequestURI().equals("/api/v1/posts/1")) {
-            response.setHeader("Content-Type", "application/json");
-            response.setBody("""
-                    {
-                        "id": 1,
-                        "title": "Post 1",
-                        "content": "Content 1"
-                    }""".stripIndent().trim());
-        } else {
-            response.setBody("Hello, World!");
+        try {
+            if (request.getRequestURI().equals("/about")) {
+                response.setBody("I am a body!");
+            } else if (request.getRequestURI().equals("/api/v1/posts/1")) {
+                Post post = new Post(1L, "Post 1", "Content 1");
+                response.setJsonBody(post);
+            } else {
+                response.setBody("Hello, World!");
+            }
+        } catch (JsonProcessingException e) {
+            response.setStatus(500);
+            response.setBody("Error processing JSON");
         }
     }
 }

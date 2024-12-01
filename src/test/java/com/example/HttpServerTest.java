@@ -1,6 +1,7 @@
 package com.example;
 
 import io.restassured.RestAssured;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,12 +10,22 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 public class HttpServerTest {
+
     private static final int PORT = 8080;
+    private static HttpServer server;
 
     @BeforeAll
-    static void BeforeAll() {
-        new Thread(() -> new HttpServer().start(PORT)).start();
+    static void beforeAll() {
+        server = new HttpServer();
+        new Thread(() -> server.start(PORT)).start();
         RestAssured.baseURI = "http://127.0.0.1:" + PORT;
+    }
+
+    @AfterAll
+    static void afterAll() {
+        if (server != null) {
+            server.stop();
+        }
     }
 
     @Test

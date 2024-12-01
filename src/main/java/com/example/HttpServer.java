@@ -1,18 +1,40 @@
 package com.example;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
 public class HttpServer {
+
+    private ServerSocket serverSocket;
+    private volatile boolean running = true;
+
     public void start(int port) {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        try {
+            serverSocket = new ServerSocket(port);
             System.out.println("Server started on port %d...".formatted(port));
 
-            while (true) {
+            while (running) {
                 Socket clientSocket = serverSocket.accept();
                 handleClient(clientSocket);
+            }
+        } catch (IOException e) {
+            if (running) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stop() {
+        running = false;
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -20,8 +42,7 @@ public class HttpServer {
     }
 
     private static void handleClient(Socket clientSocket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
             List<String> inputLines = in.lines().takeWhile(line -> !line.isEmpty()).toList();
 
@@ -36,7 +57,7 @@ public class HttpServer {
     private static String getResponse(List<String> inputLines) {
         StringBuilder outputSb = new StringBuilder();
 
-        if ( inputLines.get(0).startsWith("GET /about") ) {
+        if (inputLines.get(0).startsWith("GET /about")) {
             outputSb.append("I am a body!");
         } else {
             outputSb.append("Hello, World!");
